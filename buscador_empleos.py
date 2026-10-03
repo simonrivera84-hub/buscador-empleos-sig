@@ -4,7 +4,6 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import requests
 from bs4 import BeautifulSoup
-import google.generativeai as genai
 
 # --- 1. Configuración de credenciales (se leen desde los Secrets de GitHub) ---
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
@@ -47,8 +46,8 @@ def buscar_ofertas(termino_busqueda):
 # --- 3. Función para filtrar ofertas usando Gemini ---
 def filtrar_ofertas_con_ia(ofertas, perfil_candidato):
     print("Filtrando ofertas con IA...")
-    genai.configure(api_key=GEMINI_API_KEY)
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    from google import genai
+    client = genai.Client(api_key=GEMINI_API_KEY)
     
     ofertas_filtradas = []
     for oferta in ofertas:
@@ -63,7 +62,10 @@ def filtrar_ofertas_con_ia(ofertas, perfil_candidato):
         Responde únicamente con la palabra "SI" si la oferta es relevante para el perfil, o "NO" si no lo es. No des explicaciones.
         """
         try:
-            response = model.generate_content(prompt)
+            response = client.models.generate_content(
+                model='gemini-2.5-flash',
+                contents=prompt,
+            )
             if "SI" in response.text.upper():
                 print(f"  -> Oferta ACEPTADA: {oferta['titulo']}")
                 ofertas_filtradas.append(oferta)
