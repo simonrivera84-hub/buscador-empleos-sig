@@ -10,7 +10,7 @@ import google.generativeai as genai
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 EMAIL_PASSWORD = os.environ.get("EMAIL_PASSWORD")
 # IMPORTANTE: Cambia esto por tu correo de Gmail
-EMAIL_SENDER = "simonrivera84@gmail.com" 
+EMAIL_SENDER = "simonrivera84o@gmail.com" 
 EMAIL_RECIPIENT = "simonrivera84@gmail.com" # Puede ser el mismo
 
 # --- 2. Función para buscar ofertas de empleo en un portal (Ej: LinkedIn) ---
@@ -27,7 +27,6 @@ def buscar_ofertas(termino_busqueda):
         soup = BeautifulSoup(response.text, 'html.parser')
         
         ofertas = []
-        # Estos selectores son un ejemplo. Pueden cambiar si LinkedIn modifica su web.
         for tarjeta in soup.find_all('div', class_='base-card'):
             titulo_tag = tarjeta.find('h3', class_='base-search-card__title')
             empresa_tag = tarjeta.find('h4', class_='base-search-card__subtitle')
@@ -49,11 +48,10 @@ def buscar_ofertas(termino_busqueda):
 def filtrar_ofertas_con_ia(ofertas, perfil_candidato):
     print("Filtrando ofertas con IA...")
     genai.configure(api_key=GEMINI_API_KEY)
-    model = genai.GenerativeModel('gemini-1.5-flash') # Usamos un modelo rápido y económico
+    model = genai.GenerativeModel('gemini-1.5-flash')
     
     ofertas_filtradas = []
     for oferta in ofertas:
-        # Creamos un "prompt" (pregunta) para la IA
         prompt = f"""
         Actúa como un reclutador técnico experto en geomática y software SIG.
         Evalúa la siguiente oferta de empleo:
@@ -73,7 +71,6 @@ def filtrar_ofertas_con_ia(ofertas, perfil_candidato):
                 print(f"  -> Oferta descartada: {oferta['titulo']}")
         except Exception as e:
             print(f"  -> Error al filtrar con IA: {e}")
-            # Si hay error, la aceptamos para no perderla
             ofertas_filtradas.append(oferta)
             
     return ofertas_filtradas
@@ -90,7 +87,6 @@ def enviar_correo(ofertas):
     msg['To'] = EMAIL_RECIPIENT
     msg['Subject'] = f"🔍 {len(ofertas)} Ofertas de Empleo Geomática Encontradas"
     
-    # Creamos el cuerpo del correo en formato HTML
     cuerpo_html = "<h2>Ofertas de Empleo Relevantes</h2><ul>"
     for oferta in ofertas:
         cuerpo_html += f"<li><strong>{oferta['titulo']}</strong> en {oferta['empresa']} - <a href='{oferta['link']}'>Ver oferta</a></li>"
@@ -99,7 +95,6 @@ def enviar_correo(ofertas):
     msg.attach(MIMEText(cuerpo_html, 'html'))
     
     try:
-        # Conexión al servidor SMTP de Gmail
         with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
             server.login(EMAIL_SENDER, EMAIL_PASSWORD)
             server.sendmail(EMAIL_SENDER, EMAIL_RECIPIENT, msg.as_string())
@@ -111,7 +106,6 @@ def enviar_correo(ofertas):
 def main():
     print("Iniciando agente buscador de empleos...")
     
-    # Define aquí tu perfil y los términos de búsqueda
     terminos = ["Geomatica", "GIS", "ArcGIS", "Civil 3D", "SIG"]
     perfil = "Geomática, SIG, ArcGIS, AutoCAD Civil 3D, teledetección, Python"
     
@@ -120,7 +114,6 @@ def main():
         ofertas_encontradas = buscar_ofertas(termino)
         todas_las_ofertas.extend(ofertas_encontradas)
     
-    # Eliminamos duplicados (si una oferta sale en varias búsquedas)
     ofertas_unicas = [dict(t) for t in {tuple(d.items()) for d in todas_las_ofertas}]
     print(f"Total de ofertas únicas encontradas: {len(ofertas_unicas)}")
     
@@ -129,6 +122,6 @@ def main():
         enviar_correo(ofertas_relevantes)
     else:
         print("No se encontraron ofertas en esta ejecución.")
-Añadir lógica al agente
+
+if __name__ == "__main__":
     main()
-    
