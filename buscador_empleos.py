@@ -62,8 +62,8 @@ def filtrar_ofertas_con_ia(ofertas, perfil_candidato):
         Responde únicamente con la palabra "SI" si la oferta es relevante para el perfil, o "NO" si no lo es. No des explicaciones.
         """
         try:
-       response = client.models.generate_content(
-    model='gemini-2.5-flash',
+response = client.models.generate_content(
+    model='gemini-3.8-flash',
     contents=prompt,
 )
             )
