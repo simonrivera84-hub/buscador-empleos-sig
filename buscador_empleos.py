@@ -4,24 +4,26 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import requests
 from bs4 import BeautifulSoup
+from google import genai
 
 # --- 1. Configuración de credenciales (se leen desde los Secrets de GitHub) ---
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 EMAIL_PASSWORD = os.environ.get("EMAIL_PASSWORD")
-# IMPORTANTE: Cambia esto por tu correo de Gmail
-EMAIL_SENDER = "simonrivera84@gmail.com" 
-EMAIL_RECIPIENT = "simonrivera84@gmail.com" # Puede ser el mismo
 
-# --- 2. Función para buscar ofertas de empleo en un portal (Ej: LinkedIn) ---
+# ⚠️ IMPORTANTE: Cambia esto por tu correo real de Gmail
+EMAIL_SENDER = "simonrivera84@gmail.com" 
+EMAIL_RECIPIENT = "simonrivera84@gmail.com" 
+
+# --- 2. Función para buscar ofertas de empleo en LinkedIn ---
 def buscar_ofertas(termino_busqueda):
     print(f"Buscando ofertas para: {termino_busqueda}...")
     url = f"https://www.linkedin.com/jobs/search?keywords={termino_busqueda}&location=Chile&position=1&pageNum=0"
     headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
     }
     
     try:
-        response = requests.get(url, headers=headers, timeout=10)
+        response = requests.get(url, headers=headers, timeout=15)
         response.raise_for_status()
         soup = BeautifulSoup(response.text, 'html.parser')
         
@@ -46,9 +48,17 @@ def buscar_ofertas(termino_busqueda):
 # --- 3. Función para filtrar ofertas usando Gemini ---
 def filtrar_ofertas_con_ia(ofertas, perfil_candidato):
     print("Filtrando ofertas con IA...")
-    from google import genai
-    client = genai.Client(api_key=GEMINI_API_KEY)
     
+    if not GEMINI_API_KEY or GEMINI_API_KEY == "prueba123":
+        print("  -> ADVERTENCIA: GEMINI_API_KEY no está configurada o es de prueba. Se aceptarán todas las ofertas.")
+        return ofertas
+
+    try:
+        client = genai.Client(api_key=GEMINI_API_KEY)
+    except Exception as e:
+        print(f"  -> Error al conectar con la IA: {e}")
+        return ofertas
+
     ofertas_filtradas = []
     for oferta in ofertas:
         prompt = f"""
@@ -62,10 +72,9 @@ def filtrar_ofertas_con_ia(ofertas, perfil_candidato):
         Responde únicamente con la palabra "SI" si la oferta es relevante para el perfil, o "NO" si no lo es. No des explicaciones.
         """
         try:
-response = client.models.generate_content(
-    model='gemini-3.1-flash-lite',
-    contents=prompt,
-)
+            response = client.models.generate_content(
+                model='gemini-2.5-flash', # Si falla, prueba con 'gemini-2.0-flash' o 'gemini-1.5-flash'
+                contents=prompt,
             )
             if "SI" in response.text.upper():
                 print(f"  -> Oferta ACEPTADA: {oferta['titulo']}")
@@ -74,6 +83,7 @@ response = client.models.generate_content(
                 print(f"  -> Oferta descartada: {oferta['titulo']}")
         except Exception as e:
             print(f"  -> Error al filtrar con IA: {e}")
+            # Si hay error, la aceptamos para no perderla
             ofertas_filtradas.append(oferta)
             
     return ofertas_filtradas
@@ -82,6 +92,10 @@ response = client.models.generate_content(
 def enviar_correo(ofertas):
     if not ofertas:
         print("No hay ofertas para enviar.")
+        return
+
+    if EMAIL_SENDER == "tu_correo@gmail.com" or EMAIL_RECIPIENT == "tu_correo@gmail.com":
+        print("  -> ERROR: Debes cambiar 'tu_correo@gmail.com' por tu correo real en el código.")
         return
 
     print("Preparando y enviando correo...")
@@ -98,12 +112,14 @@ def enviar_correo(ofertas):
     msg.attach(MIMEText(cuerpo_html, 'html'))
     
     try:
-    with smtplib.SMTP_SSL('smtp.gmail.com', 465, timeout=30) as server:
-        server.login(EMAIL_SENDER, EMAIL_PASSWORD)
-        server.sendmail(EMAIL_SENDER, EMAIL_RECIPIENT, msg.as_string())
-    print("¡Correo enviado exitosamente!")
-except Exception as e:
-    print(f"Error al enviar el correo: {e}")
+        # Usamos el puerto 587 con starttls, que es el estándar moderno para Gmail
+        with smtplib.SMTP('smtp.gmail.com', 587, timeout=30) as server:
+            server.starttls() # Inicia conexión segura
+            server.login(EMAIL_SENDER, EMAIL_PASSWORD)
+            server.sendmail(EMAIL_SENDER, EMAIL_RECIPIENT, msg.as_string())
+        print("¡Correo enviado exitosamente!")
+    except Exception as e:
+        print(f"Error al enviar el correo: {e}")
 
 # --- 5. Función principal que ejecuta todo ---
 def main():
@@ -117,6 +133,7 @@ def main():
         ofertas_encontradas = buscar_ofertas(termino)
         todas_las_ofertas.extend(ofertas_encontradas)
     
+    # Eliminamos duplicados
     ofertas_unicas = [dict(t) for t in {tuple(d.items()) for d in todas_las_ofertas}]
     print(f"Total de ofertas únicas encontradas: {len(ofertas_unicas)}")
     
