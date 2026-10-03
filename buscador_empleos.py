@@ -10,8 +10,8 @@ import google.generativeai as genai
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 EMAIL_PASSWORD = os.environ.get("EMAIL_PASSWORD")
 # IMPORTANTE: Cambia esto por tu correo de Gmail
-EMAIL_SENDER = "tu_correo@gmail.com" 
-EMAIL_RECIPIENT = "tu_correo@gmail.com" # Puede ser el mismo
+EMAIL_SENDER = "simonrivera84@gmail.com" 
+EMAIL_RECIPIENT = "simonrivera84@gmail.com" # Puede ser el mismo
 
 # --- 2. Función para buscar ofertas de empleo en un portal (Ej: LinkedIn) ---
 def buscar_ofertas(termino_busqueda):
