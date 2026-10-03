@@ -63,8 +63,9 @@ def filtrar_ofertas_con_ia(ofertas, perfil_candidato):
         """
         try:
             response = client.models.generate_content(
-                model='gemini-2.5-flash',
-                contents=prompt,
+    model='gemini-2.0-flash',
+    contents=prompt,
+)
             )
             if "SI" in response.text.upper():
                 print(f"  -> Oferta ACEPTADA: {oferta['titulo']}")
