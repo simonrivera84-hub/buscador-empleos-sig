@@ -98,7 +98,6 @@ def enviar_correo(ofertas):
     msg.attach(MIMEText(cuerpo_html, 'html'))
     
     try:
-    # Usamos SMTP_SSL en el puerto 465 para una conexión segura y directa
     with smtplib.SMTP_SSL('smtp.gmail.com', 465, timeout=30) as server:
         server.login(EMAIL_SENDER, EMAIL_PASSWORD)
         server.sendmail(EMAIL_SENDER, EMAIL_RECIPIENT, msg.as_string())
