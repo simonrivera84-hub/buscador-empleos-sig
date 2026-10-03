@@ -94,13 +94,14 @@ def enviar_correo(ofertas):
     
     msg.attach(MIMEText(cuerpo_html, 'html'))
     
-    try:
-        with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
-            server.login(EMAIL_SENDER, EMAIL_PASSWORD)
-            server.sendmail(EMAIL_SENDER, EMAIL_RECIPIENT, msg.as_string())
-        print("¡Correo enviado exitosamente!")
-    except Exception as e:
-        print(f"Error al enviar el correo: {e}")
+    ttry:
+    with smtplib.SMTP('smtp.gmail.com', 587) as server:
+        server.starttls() # Inicia conexión segura
+        server.login(EMAIL_SENDER, EMAIL_PASSWORD)
+        server.sendmail(EMAIL_SENDER, EMAIL_RECIPIENT, msg.as_string())
+    print("¡Correo enviado exitosamente!")
+except Exception as e:
+    print(f"Error al enviar el correo: {e}")
 
 # --- 5. Función principal que ejecuta todo ---
 def main():
