@@ -63,7 +63,7 @@ def filtrar_ofertas_con_ia(ofertas, perfil_candidato):
         """
         try:
 response = client.models.generate_content(
-    model='gemini-3.8-flash',
+    model='gemini-2.0-flash',
     contents=prompt,
 )
             )
