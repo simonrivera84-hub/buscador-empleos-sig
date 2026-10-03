@@ -130,5 +130,5 @@ def main():
     else:
         print("No se encontraron ofertas en esta ejecución.")
 Añadir lógica al agente
-if __name__ == "__main__":
     main()
+    
