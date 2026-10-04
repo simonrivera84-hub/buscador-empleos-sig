@@ -1,5 +1,6 @@
 import os
 import smtplib
+import time
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import requests
@@ -71,16 +72,24 @@ def filtrar_ofertas_con_ia(ofertas, perfil_candidato):
         
         Responde únicamente con la palabra "SI" si la oferta es relevante para el perfil, o "NO" si no lo es. No des explicaciones.
         """
-        try:
-            response = client.models.generate_content(
-    model='gemini-3.5-flash',
-    contents=prompt,
-)
-            if "SI" in response.text.upper():
-                print(f"  -> Oferta ACEPTADA: {oferta['titulo']}")
-                ofertas_filtradas.append(oferta)
-            else:
-                print(f"  -> Oferta descartada: {oferta['titulo']}")
+try:
+    response = client.models.generate_content(
+    model='gemini-3.5-flash-lite',
+        contents=prompt,
+    )
+    if "SI" in response.text.upper():
+        print(f"  -> Oferta ACEPTADA: {oferta['titulo']}")
+        ofertas_filtradas.append(oferta)
+    else:
+        print(f"  -> Oferta descartada: {oferta['titulo']}")
+    
+    # --- AÑADE ESTA LÍNEA ---
+    time.sleep(13) # Pausa de 13 segundos para respetar el límite de 5 RPM
+    # -------------------------
+
+except Exception as e:
+    print(f"  -> Error al filtrar con IA: {e}")
+    ofertas_filtradas.append(oferta)
         except Exception as e:
             print(f"  -> Error al filtrar con IA: {e}")
             # Si hay error, la aceptamos para no perderla
